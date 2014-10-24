@@ -3,11 +3,16 @@ package reactive;
 import java.util.ArrayList;
 import java.util.List;
 
+import reactive.exceptions.AlreadyResolvedException;
+import reactive.exceptions.NotResolvedException;
+import reactive.exceptions.PromiseException;
+
 /**
  * Holds the future value of an invocation.
  * When someone needs a value of type T that will be available in the future, return a promise of type T.
  * The caller can register a callback via {@link #whenAvailable(Callback)} or {@link #whenAvailable(FunctionPointer)}
  * which will be invoked once the value is available. We say then that the promise is resolved.
+ * This class is not thread safe; concurrent access must be synchronized.
  * 
  * In order to let callers know that a value is available, use {@link #set(Object)}.
  * @author george georgovassilis
@@ -34,19 +39,22 @@ public class Promise<T> {
 			callback.success(value);
 	}
 
+	public Exception getError() {
+		return error;
+	}
+
 	protected void invokeCallbacks() {
-		for (Callback<T> c : callbacks) {
+		for (Callback<T> c : callbacks)
 			invokeCallback(c);
-		}
 	}
 
 	/**
 	 * Gets the value once the promise has been resolved.
 	 * @return
 	 */
-	public T get() throws RuntimeException{
+	public T get() throws PromiseException{
 		if (!isSet)
-			throw new RuntimeException("Promise hasn't been resolved yet");
+			throw new NotResolvedException("Promise hasn't been resolved yet");
 		return value;
 	}
 
@@ -54,7 +62,9 @@ public class Promise<T> {
 	 * Resolve the promise with value and invoke all registered callbacks
 	 * @param value
 	 */
-	public void set(T value) {
+	public void set(T value) throws PromiseException{
+		if (isSet)
+			throw new AlreadyResolvedException("Promise has already been resolved");
 		this.value = value;
 		isSet = true;
 		invokeCallbacks();
@@ -67,20 +77,22 @@ public class Promise<T> {
 	 */
 	public void whenAvailable(Callback<T> callback) {
 		callbacks.add(callback);
-		if (isSet) {
+		if (isSet) 
 			invokeCallbacks();
-		}
 	}
 
 	/**
 	 * Resolve the promise with a failure
 	 * @param e
 	 */
-	public void fail(Exception e) {
+	public void fail(Exception e) throws PromiseException{
+		if (isSet)
+			throw new AlreadyResolvedException("Promise has already been resolved");
+		if (e == null)
+			throw new PromiseException("Error can't be null");
 		this.error = e;
 		isSet = true;
-		for (Callback<T> c : callbacks)
-			c.error(e);
+		invokeCallbacks();
 	}
 	
 	/**

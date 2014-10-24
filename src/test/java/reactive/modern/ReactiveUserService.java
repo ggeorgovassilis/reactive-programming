@@ -4,7 +4,7 @@ import reactive.FunctionPointer;
 import reactive.Promise;
 import reactive.legacy.UserService;
 import reactive.model.User;
-import static reactive.CallbackToPromiseAdapter.callback;
+import static reactive.CallbackAdapter.callback;
 
 /**
  * Reactive wrapper around the legacy, asynchronous {@link UserService}
@@ -27,6 +27,7 @@ public class ReactiveUserService {
 	 * @param password
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public Promise<User> getUser(String login, String password){
 		Promise<User> promise = new Promise<User>();
 		service.getUser(login, password, callback(UserService.Callback.class, promise));
@@ -43,6 +44,7 @@ public class ReactiveUserService {
 	 * @param statusPromise
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	protected FunctionPointer userAvailable(Promise<User> userPromise, Promise<Boolean> statusPromise){
 		if (userPromise.isAvailable()){
 			User user = userPromise.get();

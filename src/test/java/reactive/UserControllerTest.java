@@ -9,7 +9,14 @@ import reactive.modern.ReactiveUserService;
 import reactive.modern.ReactiveLoginForm;
 
 import static org.junit.Assert.*;
-public class ReactiveTest {
+
+/**
+ * Integration test that verifies the entire package: {@link Promise}, {@link FunctionPointer}, {@link CallbackAdapter}
+ * @author george georgovassilis
+ *
+ */
+
+public class UserControllerTest {
 
 	@Test
 	public void test(){
