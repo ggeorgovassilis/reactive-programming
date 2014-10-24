@@ -140,7 +140,7 @@ void setup(){
 }
 ```
 
-The section '''new FunctionPointer(this, arguments)''' creates a pointer to whatever method we're currently in which belongs to '''this'''.
+The section ```new FunctionPointer(this, arguments)``` creates a pointer to whatever method we're currently in which belongs to ```this```.
 Unsurprisingly, under the hood it works with reflection and by inspecting the current stack so the approach depends on a few good-will preconditions
 like the JVM being able to assemble a stracktrace. Currently the implementation is super-brittle: you _really_ must construct and return the function
 pointer as given in the example, no nesting or inner classes, otherwise the implementation will pick the wrong method name from the stack because it
