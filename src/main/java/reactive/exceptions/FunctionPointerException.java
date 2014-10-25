@@ -1,9 +1,9 @@
 package reactive.exceptions;
 
-import reactive.FunctionPointer;
+import reactive.FunctionPointerImpl;
 
 /**
- * Generic exception used by the {@link FunctionPointer}
+ * Generic exception used by the {@link FunctionPointerImpl}
  * @author george georgovassilis
  *
  */

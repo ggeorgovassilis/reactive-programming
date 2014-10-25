@@ -1,7 +1,8 @@
 package reactive.modern;
 
-import reactive.FunctionPointer;
+import reactive.FunctionPointerImpl;
 import reactive.Promise;
+import reactive.PromiseImpl;
 import reactive.legacy.LoginForm;
 import reactive.model.User;
 
@@ -35,13 +36,13 @@ public class ReactiveLoginForm {
 	 * @param promise
 	 * @return The method must return a function pointer to itself with the current arguments.
 	 */
-	protected FunctionPointer onUserAvailable(Promise<User> promise){
+	protected FunctionPointerImpl<User> onUserAvailable(Promise<User> promise){
 		if (promise.isAvailable()){
 			User user = promise.get();
 			loginForm.setFullUserName(user.fullName);
 			loginForm.setCustomerId(user.customerId);
 		}
-		return new FunctionPointer(this, promise);
+		return new FunctionPointerImpl<User>(this, promise);
 	}
 	
 	/**
@@ -52,12 +53,12 @@ public class ReactiveLoginForm {
 		user.whenAvailable(onUserAvailable(user));
 	}
 	
-	protected FunctionPointer onUserStatusAvailable(Promise<Boolean> promise){
+	protected FunctionPointerImpl<User> onUserStatusAvailable(Promise<Boolean> promise){
 		if (promise.isAvailable()){
 			boolean status = promise.get();
 			loginForm.setUserStatus(status?"Active":"Inactive");
 		}
-		return new FunctionPointer(this, promise);
+		return new FunctionPointerImpl<User>(this, promise);
 	}
 
 	/**
@@ -74,7 +75,7 @@ public class ReactiveLoginForm {
 	 * @return
 	 */
 	public Promise<Void> getLoginButtonAction(){
-		final Promise<Void> promise = new Promise<Void>();
+		final Promise<Void> promise = new PromiseImpl<Void>();
 		loginForm.setClickListenerToLoginButton(new LoginForm.ClickListener() {
 			@Override
 			public void onLoginButtonClicked() {

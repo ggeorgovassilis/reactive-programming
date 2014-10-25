@@ -1,7 +1,8 @@
 package reactive.modern;
 
-import reactive.FunctionPointer;
+import reactive.FunctionPointerImpl;
 import reactive.Promise;
+import reactive.PromiseImpl;
 import reactive.legacy.UserService;
 import reactive.model.User;
 import static reactive.CallbackAdapter.callback;
@@ -29,7 +30,7 @@ public class ReactiveUserService {
 	 */
 	@SuppressWarnings("unchecked")
 	public Promise<User> getUser(String login, String password){
-		Promise<User> promise = new Promise<User>();
+		Promise<User> promise = new PromiseImpl<User>("getUser");
 		service.getUser(login, password, callback(UserService.Callback.class, promise));
 		return promise;
 	}
@@ -38,19 +39,19 @@ public class ReactiveUserService {
 	 * Our callback method which will be called once userPromise resolves.
 	 * As per convention, the method has to check whether userPromise is available because
 	 * it's quite likely that the method will be called before userPromise resolves.
-	 * In any case, the method must always return a {@link FunctionPointer} to itself with the
+	 * In any case, the method must always return a {@link FunctionPointerImpl} to itself with the
 	 * current arguments.
 	 * @param userPromise
 	 * @param statusPromise
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	protected FunctionPointer userAvailable(Promise<User> userPromise, Promise<Boolean> statusPromise){
+	protected FunctionPointerImpl<User> userAvailable(Promise<User> userPromise, Promise<Boolean> statusPromise){
 		if (userPromise.isAvailable()){
 			User user = userPromise.get();
 			service.isUserActive(user, callback(UserService.Callback.class, statusPromise));
 		}
-		return new FunctionPointer(this, userPromise, statusPromise);
+		return new FunctionPointerImpl<>(this, userPromise, statusPromise);
 	}
 	
 	/**
@@ -60,7 +61,7 @@ public class ReactiveUserService {
 	 * @return
 	 */
 	public Promise<Boolean> getStatus(Promise<User> user){
-		Promise<Boolean> status = new Promise<Boolean>();
+		Promise<Boolean> status = new PromiseImpl<Boolean>();
 		user.whenAvailable(userAvailable(user, status));
 		return status;
 	}

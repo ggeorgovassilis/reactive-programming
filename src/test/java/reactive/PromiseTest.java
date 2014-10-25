@@ -2,15 +2,16 @@ package reactive;
 
 import org.junit.Test;
 
-import reactive.Promise.Callback;
 import reactive.exceptions.AlreadyResolvedException;
 import reactive.exceptions.NotResolvedException;
 import reactive.exceptions.PromiseException;
+import reactive.Promise;
+import reactive.Promise.Callback;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Verifying {@link Promise} functionality
+ * Verifying {@link PromiseImpl} functionality
  * @author george georgovassilis
  *
  */
@@ -25,7 +26,7 @@ public class PromiseTest {
 	@Test
 	public void test_set(){
 		final String value = "value";
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		assertFalse(p.isAvailable());
 		p.set(value);
 		assertTrue(p.isAvailable());
@@ -34,7 +35,7 @@ public class PromiseTest {
 
 	@Test(expected=NotResolvedException.class)
 	public void test_get_without_set(){
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		assertEquals("", p.get());
 	}
 
@@ -42,7 +43,7 @@ public class PromiseTest {
 	public void test_double_set(){
 		final String value1 = "value1";
 		final String value2 = "value2";
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		p.set(value1);
 		p.set(value2);
 	}
@@ -51,7 +52,7 @@ public class PromiseTest {
 	public void test_set_fail(){
 		final String value = "value";
 		final Exception error = new Exception();
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		p.set(value);
 		p.fail(error);
 	}
@@ -60,14 +61,14 @@ public class PromiseTest {
 	public void test_fail_set(){
 		final String value = "value";
 		final Exception error = new Exception();
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		p.fail(error);
 		p.set(value);
 	}
 
 	@Test
 	public void test_errors(){
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		final Exception error = new Exception();
 		p.fail(error);
 		assertTrue(p.isAvailable());
@@ -76,7 +77,7 @@ public class PromiseTest {
 	
 	@Test
 	public void test_null_set(){
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		p.set(null);
 		assertTrue(p.isAvailable());
 		assertNull(p.get());
@@ -84,14 +85,14 @@ public class PromiseTest {
 
 	@Test(expected=PromiseException.class)
 	public void test_null_error(){
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		p.fail(null);
 	}
 	
 	@Test
 	public void test_callback(){
 		final String value = "value";
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		Callback<String> callback = mockCallback();
 		p.whenAvailable(callback);
 		verify(callback, never()).success(anyString());
@@ -102,7 +103,7 @@ public class PromiseTest {
 	@Test
 	public void test_callback_error(){
 		final Exception error = new Exception();
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		Callback<String> callback = mockCallback();
 		p.whenAvailable(callback);
 		verify(callback, never()).error(any(Exception.class));
@@ -113,7 +114,7 @@ public class PromiseTest {
 	@Test
 	public void test_multiple_callback_error(){
 		final Exception error = new Exception();
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		
 		Callback<String> callback1 = mockCallback();
 		Callback<String> callback2 = mockCallback();
@@ -130,7 +131,7 @@ public class PromiseTest {
 	@Test
 	public void test_callback_on_resolved_promise(){
 		final String value = "value";
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		Callback<String> callback = mockCallback();
 		p.set(value);
 		p.whenAvailable(callback);
@@ -140,7 +141,7 @@ public class PromiseTest {
 	@Test
 	public void test_callback_error_on_resolved_promise(){
 		final Exception error = new Exception();
-		Promise<String> p = new Promise<String>();
+		Promise<String> p = new PromiseImpl<String>();
 		Callback<String> callback = mockCallback();
 		p.fail(error);
 		p.whenAvailable(callback);

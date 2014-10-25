@@ -7,11 +7,10 @@ import reactive.legacy.MockView;
 import reactive.model.User;
 import reactive.modern.ReactiveUserService;
 import reactive.modern.ReactiveLoginForm;
-
 import static org.junit.Assert.*;
 
 /**
- * Integration test that verifies the entire package: {@link Promise}, {@link FunctionPointer}, {@link CallbackAdapter}
+ * Integration test that verifies the entire package: {@link PromiseImpl}, {@link FunctionPointerImpl}, {@link CallbackAdapter}
  * @author george georgovassilis
  *
  */
@@ -54,4 +53,36 @@ public class UserControllerTest {
 		legacyUserService.resolveIsUserActive(true);
 		assertEquals("Active", legacyView.getStatus());
 	}
+	
+	@Test
+	public void testDifferentImplementation(){
+		MockUserService legacyUserService = new MockUserService();
+		MockView legacyView = new MockView();
+		
+		User user = new User();
+		user.fullName = "test user";
+		user.customerId = "12345";
+
+		ADifferentUserController controller = new ADifferentUserController(legacyUserService, legacyView);
+		
+		controller.doLogin("login", "password");
+
+		assertEquals(null, legacyView.getUserName());
+		assertEquals(null, legacyView.getStatus());
+		assertEquals(null, legacyView.getCustomerId());
+	
+		legacyUserService.resolveGetUser(user);
+
+		assertEquals(null, legacyView.getUserName());
+		assertEquals(null, legacyView.getStatus());
+		assertEquals(null, legacyView.getCustomerId());
+
+		legacyUserService.resolveIsUserActive(true);
+
+
+		assertEquals("test user", legacyView.getUserName());
+		assertEquals("Active", legacyView.getStatus());
+		assertEquals("12345", legacyView.getCustomerId());
+	}
+	
 }

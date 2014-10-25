@@ -31,7 +31,7 @@ public class UserController {
 				.whenAvailable(onSubmitButtonClicked(buttonClickedAction));
 	}
 
-	protected FunctionPointer onSubmitButtonClicked(Promise<Void> buttonClicked) {
+	protected FunctionPointerImpl<User> onSubmitButtonClicked(Promise<Void> buttonClicked) {
 		if (buttonClicked.isAvailable()) {
 			String login = view.getLogin();
 			String password = view.getPassword();
@@ -41,7 +41,7 @@ public class UserController {
 			Promise<Boolean> status = service.getStatus(user);
 			view.showUserStatus(status);
 		}
-		return new FunctionPointer(this, buttonClicked);
+		return new FunctionPointerImpl<User>(this, buttonClicked);
 
 	}
 }

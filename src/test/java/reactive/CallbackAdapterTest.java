@@ -1,6 +1,7 @@
 package reactive;
 
 import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 public class CallbackAdapterTest {
@@ -27,7 +28,7 @@ public class CallbackAdapterTest {
 	@Test
 	public void test_simple_callback(){
 		final String value = "value";
-		Promise<String> promise = new Promise<String>();
+		Promise<String> promise = new PromiseImpl<String>();
 		SingleValueCallback callback = CallbackAdapter.callback(SingleValueCallback.class, promise);
 		
 		assertFalse(promise.isAvailable());
@@ -39,7 +40,7 @@ public class CallbackAdapterTest {
 	@Test
 	public void test_callback_with_value_and_error_setters(){
 		final String value = "value";
-		Promise<String> promise = new Promise<String>();
+		Promise<String> promise = new PromiseImpl<String>();
 		ValueAndErrorCallback callback = CallbackAdapter.callback(ValueAndErrorCallback.class, promise);
 		
 		assertFalse(promise.isAvailable());
@@ -51,7 +52,7 @@ public class CallbackAdapterTest {
 	@Test
 	public void test_callback_with_misleading_methods(){
 		final String value = "value";
-		Promise<String> promise = new Promise<String>();
+		Promise<String> promise = new PromiseImpl<String>();
 		BaitCallback callback = CallbackAdapter.callback(BaitCallback.class, promise);
 		
 		assertFalse(promise.isAvailable());

@@ -46,7 +46,7 @@ public class ReflectionUtils {
 		for (Method m : methods) {
 			if (!m.getName().equals(methodName))
 				continue;
-			if (!FunctionPointer.class.isAssignableFrom(m.getReturnType()))
+			if (!returnType.isAssignableFrom(m.getReturnType()))
 				continue;
 			Class<?>[] paramTypes = m.getParameterTypes();
 			if (paramTypes.length != argumentTypes.length)

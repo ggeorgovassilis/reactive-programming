@@ -120,7 +120,7 @@ The code in this repository implements a kind of function pointers for Java with
 
 ```java
 
-FunctionPointer onSubmitButtonClicked(Promise<ClickEvent> buttonClicked) {
+FunctionPointer<Void> onSubmitButtonClicked(Promise<ClickEvent> buttonClicked) {
 	if (buttonClicked.isAvailable()) {
 		String login = view.getLogin();
 		String password = view.getPassword();
@@ -130,7 +130,7 @@ FunctionPointer onSubmitButtonClicked(Promise<ClickEvent> buttonClicked) {
 		Promise<Boolean> status = service.getStatus(user);
 		view.showUserStatus(status);
 	}
-	return new FunctionPointer(this, buttonClicked);
+	return new FunctionPointer<Void>(this, buttonClicked);
 
 }
 
@@ -152,6 +152,8 @@ The third convention requires that the method checks whether the passed in promi
 do that check for us? It could, but we need to go into the method at least once in order to construct the function pointer, and that has to happen before the
 promise has been resolved.
 
+```
+
 ## Example: Service callbacks
 
 Another example from the unit tests is a fictional ```UserService``` which returns, in an asynchronous manner, a user when given login and password as so:
@@ -171,7 +173,7 @@ look for single-argument methods which can resolve ```Promise```.
 So the example becomes:
 
 ```java
-Promise<User> promise = new Promise<>();
+Promise<User> promise = new PromiseImpl<>();
 
 userService.getUser(login, password, CallbackAdapter.callback(Callback.class, promise);
 ```
@@ -183,20 +185,51 @@ import static CallbackToPromiseAdapter.callback;
 
 ...
 
-FunctionPointer onUserAvailable(Promise<User> user){
+FunctionPointer<Void> onUserAvailable(Promise<User> user){
 	if (user.isAvailable()){
 		form.showFullUserName(user.getValue().getFullUserName());
 	}
-	return new FunctionPointer(this, user);
+	return new FunctionPointerImpl(this, user);
 }
 
 void doLogin(){
 	String login = form.getLogin();
 	String password = form.getPassword();
 
-	Promise<User> userPromise = new Promise<User>();
+	Promise<User> userPromise = new PromiseImpl<User>();
 	userService.getUser(login, password, callback(Callback.class, userPromise);
 
 	userPromise.whenAvailable(onUserAvailable(userPromise));
+}
+```
+
+Maybe you noticed the generic declaration on ```FunctionPointer``` and wondered what's that for? ```FunctionPointer``` is, as a matter of fact, a
+```Promise``` and quite useful when callbacks return new promises, i.e. because they somehow transform their arguments or invoke further asynchronous operations.
+Here is how we agument rewrite the previous example with a status checker by using a callback that makes use of a promise:
+
+```java
+import static CallbackToPromiseAdapter.callback;
+
+...
+
+FunctionPointer<Void> onUserAvailable(Promise<User> user){
+	FunctionPointer<Boolean> status = new FunctionPointerImpl(this, user);
+	if (user.isAvailable()){
+		userService.checkStatus(user.get(), callback(Callback.class, status);
+	}
+	return status;
+}
+
+void doLogin(){
+	String login = form.getLogin();
+	String password = form.getPassword();
+
+	Promise<User> userPromise = new PromiseImpl<User>();
+	userService.getUser(login, password, callback(Callback.class, userPromise);
+
+	Promise<Status> status = userPromise.whenAvailable(onUserAvailable(userPromise));
+	
+	form.showUserFullName(userPromise);
+	form.showStatus(status);
 }
 ```
