@@ -11,20 +11,21 @@ import reactive.exceptions.FunctionPointerException;
  * of the calling method's name. The method is a little brittle and should
  * probably be improved.
  * 
- * Instances of this class are not thread safe and concurrent access must be synchronized
- * manually.
+ * Instances of this class are not thread safe and concurrent access must be
+ * synchronized manually.
  * 
  * @author george georgovassilis
  *
  */
-public class FunctionPointerImpl<T> extends PromiseImpl<T> implements FunctionPointer<T>{
+public class FunctionPointerImpl<T> extends PromiseImpl<T> implements
+		FunctionPointer<T> {
 
 	private Object target;
 	private Method method;
 	private Object[] arguments;
 
 	public FunctionPointerImpl(Object target, Object... arguments) {
-		super("Callback on "+target);
+		super("Callback on " + target);
 		StackTraceElement[] trace = Thread.currentThread().getStackTrace();
 		Method method = null;
 		Class<?> c = target.getClass();
@@ -33,18 +34,25 @@ public class FunctionPointerImpl<T> extends PromiseImpl<T> implements FunctionPo
 		// FunctionPointer and b) has as parameters all the supplied argument
 		// types
 		Class<?>[] argumentTypes = ReflectionUtils.toTypes(arguments);
-		for (int i = 0; i <trace.length && method == null; i++) {
+		for (int i = 0; i < trace.length && method == null; i++) {
 			StackTraceElement caller = trace[i];
 			String methodName = caller.getMethodName();
-			Method m = ReflectionUtils.findMethod(c, methodName,
-					Promise.class, argumentTypes);
+			Method m = ReflectionUtils.findMethod(c, methodName, Promise.class,
+					argumentTypes);
 			if (m != null)
 				method = m;
 		}
-		if (method == null)
+		if (method == null) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Couldn't find method in trace: ");
+			for (StackTraceElement e : trace)
+				sb.append(e).append("\n");
+			System.err.println(sb);
 			throw new FunctionPointerException(
-					"I couldn't find a method in the current call stack which returns a "+Promise.class+" and accepts these arguments: "
+					"I couldn't find a method in the current call stack which returns a "
+							+ Promise.class + " and accepts these arguments: "
 							+ Arrays.toString(arguments));
+		}
 		method.setAccessible(true);
 		this.target = target;
 		this.method = method;
@@ -69,6 +77,7 @@ public class FunctionPointerImpl<T> extends PromiseImpl<T> implements FunctionPo
 	@SuppressWarnings("unchecked")
 	@Override
 	public Promise<T> invoke() {
-		return (Promise<T>)ReflectionUtils.invoke(method, target, arguments);
+		return (Promise<T>) ReflectionUtils.invoke(method, target, arguments);
 	}
+
 }

@@ -70,5 +70,10 @@ public interface Promise<T> {
 	 * @return
 	 */
 	boolean isAvailable();
-
+	
+	/**
+	 * Blocks until either {@link #set(Object)} or {@link #fail(Exception)} is called
+	 */
+	void waitForResolution();
+	
 }

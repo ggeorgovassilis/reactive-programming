@@ -9,5 +9,5 @@ public interface FunctionPointer<T> extends Promise<T>{
 	Method getMethod();
 
 	Object invoke();
-
+	
 }

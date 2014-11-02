@@ -2,6 +2,8 @@ package reactive;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Test;
@@ -78,4 +80,30 @@ public class FunctionPointerTest {
 		assertEquals(100, gasPrice.get().intValue());
 	}
 
+	protected FunctionPointer<Integer> add(Promise<Integer> a, Promise<Integer> b, List<String> log){
+		FunctionPointer<Integer> fp = new FunctionPointerImpl<Integer>(this, a, b, log);
+		log.add("pass");
+		if (a.isAvailable() && b.isAvailable()){
+			log.add("match");
+			fp.set(a.get()+b.get());
+		}
+		log.add("exit");
+		return fp;
+	}
+	
+	@Test
+	public void test_preresolved_promises(){
+		Promise<Integer> a = new PromiseImpl<Integer>();
+		Promise<Integer> b = new PromiseImpl<Integer>();
+		List<String> log = new ArrayList<String>();
+		a.set(1);
+		b.set(2);
+		Promise<Integer> sum = b.whenAvailable(add(a,b, log));
+		assertTrue(sum.isAvailable());
+		assertEquals(3, sum.get().intValue());
+		assertEquals("pass", log.get(0));
+		assertEquals("match", log.get(1));
+		assertEquals("exit", log.get(2));
+		assertEquals(3, log.size());
+	}
 }
