@@ -62,7 +62,7 @@ public class ReactiveUserService {
 	 */
 	public Promise<Boolean> getStatus(Promise<User> user){
 		Promise<Boolean> status = new PromiseImpl<Boolean>();
-		user.whenAvailable(userAvailable(user, status));
+		user.invokeWhenAvailable(userAvailable(user, status));
 		return status;
 	}
 }

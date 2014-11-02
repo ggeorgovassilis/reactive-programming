@@ -5,7 +5,7 @@ import reactive.exceptions.PromiseException;
 /**
  * Holds the future value of an invocation.
  * When someone needs a value of type T that will be available in the future, return a promise of type T.
- * The caller can register a callback via {@link #whenAvailable(Callback)} or {@link #whenAvailable(FunctionPointer)}
+ * The caller can register a callback via {@link #whenAvailable(Callback)} or {@link #invokeWhenAvailable(FunctionPointer)}
  * which will be invoked once the value is available. We say then that the promise is resolved.
  * Implementations can be- but generally don't have to be thread safe; concurrent access must be synchronized.
  * 
@@ -14,18 +14,7 @@ import reactive.exceptions.PromiseException;
  *
  * @param <T>
  */
-public interface Promise<T> {
-
-	/**
-	 * Callback interface for {@link Promise#whenAvailable(Callback)}
-	 *
-	 * @param <T>
-	 */
-	public interface Callback<T> {
-		void success(T success);
-
-		void error(Exception e);
-	}
+public interface Promise<T> extends Callback<T>{
 
 	/**
 	 * Returns the error, if any, with which this promise was resolved
@@ -43,6 +32,7 @@ public interface Promise<T> {
 	 * Resolve the promise with value and invoke all registered callbacks
 	 * @param value
 	 */
+	@Override
 	void set(T value) throws PromiseException;
 
 	/**
@@ -56,14 +46,15 @@ public interface Promise<T> {
 	 * Resolve the promise with a failure
 	 * @param e
 	 */
+	@Override
 	void fail(Exception e) throws PromiseException;
 
 	/**
 	 * Register a function pointer as callback. Conventions of {@link #whenAvailable(Callback)} apply
 	 * @param pointer
-	 * @return
+	 * @return A promise which will resolve together with "pointer".
 	 */
-	<R> Promise<R> whenAvailable(FunctionPointer<R> pointer);
+	<R> Promise<R> invokeWhenAvailable(FunctionPointer<R> pointer);
 
 	/**
 	 * Determines whether the promise has been resolved already. Only then can {@link #get()} be safely invked.

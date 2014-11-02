@@ -47,7 +47,7 @@ public class FunctionPointerTest {
 		Promise<String> promise = new PromiseImpl<String>();
 		AtomicReference<String> ref = new AtomicReference<String>();
 		
-		promise.whenAvailable(callbackMethod(promise, ref));
+		promise.invokeWhenAvailable(callbackMethod(promise, ref));
 		
 		assertFalse(promise.isAvailable());
 		assertNull(ref.get());
@@ -63,7 +63,7 @@ public class FunctionPointerTest {
 		Promise<String> promise = new PromiseImpl<String>();
 		AtomicReference<String> ref = new AtomicReference<String>();
 		
-		promise.whenAvailable(callbackMethod_that_sets_wrong_arguments(promise, ref));
+		promise.invokeWhenAvailable(callbackMethod_that_sets_wrong_arguments(promise, ref));
 		
 		assertFalse(promise.isAvailable());
 		assertNull(ref.get());
@@ -74,7 +74,7 @@ public class FunctionPointerTest {
 	@Test
 	public void test_callback_with_return_promise(){
 		Promise<String> gasPriceText = new PromiseImpl<String>();
-		Promise<Integer> gasPrice = (Promise<Integer>)gasPriceText.whenAvailable(callbackMethod_that_converts_text_to_number(gasPriceText));
+		Promise<Integer> gasPrice = (Promise<Integer>)gasPriceText.invokeWhenAvailable(callbackMethod_that_converts_text_to_number(gasPriceText));
 		assertFalse(gasPrice.isAvailable());
 		gasPriceText.set("100");
 		assertEquals(100, gasPrice.get().intValue());
@@ -98,7 +98,7 @@ public class FunctionPointerTest {
 		List<String> log = new ArrayList<String>();
 		a.set(1);
 		b.set(2);
-		Promise<Integer> sum = b.whenAvailable(add(a,b, log));
+		Promise<Integer> sum = b.invokeWhenAvailable(add(a,b, log));
 		assertTrue(sum.isAvailable());
 		assertEquals(3, sum.get().intValue());
 		assertEquals("pass", log.get(0));

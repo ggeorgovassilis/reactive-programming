@@ -41,7 +41,7 @@ public class ADifferentUserController {
 	public void doLogin(String login, String password){
 		Promise<User> user = new PromiseImpl<>();
 		userService.getUser(login, password, CallbackAdapter.callback(UserService.Callback.class, user));
-		Promise<Boolean> status = user.whenAvailable(getUserStatus(user));
-		status.whenAvailable(showUserDetails(user, status));
+		Promise<Boolean> status = user.invokeWhenAvailable(getUserStatus(user));
+		status.invokeWhenAvailable(showUserDetails(user, status));
 	}
 }

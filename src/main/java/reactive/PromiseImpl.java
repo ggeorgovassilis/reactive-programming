@@ -11,7 +11,7 @@ import reactive.exceptions.PromiseException;
  * Holds the future value of an invocation. When someone needs a value of type T
  * that will be available in the future, return a promise of type T. The caller
  * can register a callback via {@link #whenAvailable(Callback)} or
- * {@link #whenAvailable(FunctionPointerImpl)} which will be invoked once the
+ * {@link #invokeWhenAvailable(FunctionPointerImpl)} which will be invoked once the
  * value is available. We say then that the promise is resolved. This class is
  * not thread safe; concurrent access must be synchronized.
  * 
@@ -27,7 +27,7 @@ public class PromiseImpl<T> implements Promise<T> {
 	protected T value;
 	protected Exception error;
 	protected boolean isSet = false;
-	protected List<Callback<T>> callbacks = new ArrayList<Promise.Callback<T>>();
+	protected List<Callback<T>> callbacks = new ArrayList<Callback<T>>();
 	protected final String name;
 
 	public PromiseImpl(String name) {
@@ -40,9 +40,9 @@ public class PromiseImpl<T> implements Promise<T> {
 
 	protected void invokeCallback(Callback<T> callback) {
 		if (error != null)
-			callback.error(error);
+			callback.fail(error);
 		else
-			callback.success(value);
+			callback.set(value);
 	}
 
 	@Override
@@ -78,7 +78,6 @@ public class PromiseImpl<T> implements Promise<T> {
 	@Override
 	public void set(T value) throws PromiseException {
 		synchronized (callbacks) {
-
 			if (isSet)
 				throw new AlreadyResolvedException(
 						"Promise has already been resolved: " + toString());
@@ -90,7 +89,6 @@ public class PromiseImpl<T> implements Promise<T> {
 	@Override
 	public void whenAvailable(Callback<T> callback) {
 		synchronized (callbacks) {
-
 			if (callbacks.contains(callback))
 				throw new PromiseException("Don't register callbacks twice");
 			if (isSet)
@@ -115,8 +113,23 @@ public class PromiseImpl<T> implements Promise<T> {
 	}
 
 	@Override
-	public <R> Promise<R> whenAvailable(final FunctionPointer<R> functionPointer) {
+	public <R> Promise<R> invokeWhenAvailable(final FunctionPointer<R> functionPointer) {
 		synchronized (callbacks) {
+			/**
+			 * A rundown of this construct: When this promise resolves, it will
+			 * call the function pointer. The function pointer may return as the
+			 * result of its invocation another promise. That promise isn't
+			 * necessarily immediately resolved. Since every invocation of
+			 * functionPointer will return a different instance of a promise, we
+			 * can't just "final promise = ..." and remember the first promise
+			 * ever returned.
+			 * 
+			 * Thus, once "this" promise resolves, it will call the function
+			 * pointer. The function pointer returns a promise which may, or may
+			 * not have been resolved. In any case, we listen to that result
+			 * promise and once it resolves we resolve correspondingly the
+			 * returnPromise
+			 */
 
 			final Promise<R> returnPromise = new PromiseImpl<R>(
 					"returnPromise from PromiseImpl.whenAvailable(FP) " + name);
@@ -124,34 +137,19 @@ public class PromiseImpl<T> implements Promise<T> {
 
 				@SuppressWarnings("unchecked")
 				@Override
-				public void success(T success) {
+				public void set(T success) {
 					synchronized (callbacks) {
 						Promise<R> result = null;
 						if (functionPointer.isAvailable())
 							result = (Promise<R>) functionPointer;
 						else
 							result = (Promise<R>) functionPointer.invoke();
-						result.whenAvailable(new Callback<R>() {
-
-							@Override
-							public void success(R success) {
-								synchronized (callbacks) {
-									returnPromise.set(success);
-								}
-							}
-
-							@Override
-							public void error(Exception e) {
-								synchronized (callbacks) {
-									returnPromise.fail(e);
-								}
-							}
-						});
+						result.whenAvailable(returnPromise);
 					}
 				}
 
 				@Override
-				public void error(Exception e) {
+				public void fail(Exception e) {
 				}
 			});
 			return returnPromise;

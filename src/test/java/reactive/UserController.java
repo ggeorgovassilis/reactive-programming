@@ -28,7 +28,7 @@ public class UserController {
 		this.view = view;
 		Promise<Void> buttonClickedAction = view.getLoginButtonAction();
 		buttonClickedAction
-				.whenAvailable(onSubmitButtonClicked(buttonClickedAction));
+				.invokeWhenAvailable(onSubmitButtonClicked(buttonClickedAction));
 	}
 
 	protected FunctionPointerImpl<User> onSubmitButtonClicked(Promise<Void> buttonClicked) {

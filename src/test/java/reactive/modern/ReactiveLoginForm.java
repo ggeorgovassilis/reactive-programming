@@ -50,7 +50,7 @@ public class ReactiveLoginForm {
 	 * @param user
 	 */
 	public void showUser(Promise<User> user){
-		user.whenAvailable(onUserAvailable(user));
+		user.invokeWhenAvailable(onUserAvailable(user));
 	}
 	
 	protected FunctionPointerImpl<User> onUserStatusAvailable(Promise<Boolean> promise){
@@ -66,7 +66,7 @@ public class ReactiveLoginForm {
 	 * @param status
 	 */
 	public void showUserStatus(Promise<Boolean> status){
-		status.whenAvailable(onUserStatusAvailable(status));
+		status.invokeWhenAvailable(onUserStatusAvailable(status));
 	}
 	
 	/**

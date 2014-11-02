@@ -152,8 +152,6 @@ The third convention requires that the method checks whether the passed in promi
 do that check for us? It could, but we need to go into the method at least once in order to construct the function pointer, and that has to happen before the
 promise has been resolved.
 
-```
-
 ## Example: Service callbacks
 
 Another example from the unit tests is a fictional ```UserService``` which returns, in an asynchronous manner, a user when given login and password as so:
@@ -166,7 +164,7 @@ userService.getUser(login, password, new Callback(){
 };
 ```
 
-The library provides a convenience utility ```CallbackToPromiseAdapter.callback(Class, Promise)``` which, again via proxies and reflection, auto-generates
+The library provides a convenience utility ```CallbackAdapter.callback(Class, Promise)``` which, again via proxies and reflection, auto-generates
 a callback of type ```Class``` which will resolve ```Promise``` when the callback is called. All it does is proxy the ```Class``` interface and
 look for single-argument methods which can resolve ```Promise```.
 
@@ -181,7 +179,7 @@ userService.getUser(login, password, CallbackAdapter.callback(Callback.class, pr
 ## Combining both examples: Get login and password from a form, check the server, show results
 
 ```java
-import static CallbackToPromiseAdapter.callback;
+import static CallbackAdapter.callback;
 
 ...
 
@@ -199,16 +197,16 @@ void doLogin(){
 	Promise<User> userPromise = new PromiseImpl<User>();
 	userService.getUser(login, password, callback(Callback.class, userPromise);
 
-	userPromise.whenAvailable(onUserAvailable(userPromise));
+	userPromise.invokeWhenAvailable(onUserAvailable(userPromise));
 }
 ```
 
 Maybe you noticed the generic declaration on ```FunctionPointer``` and wondered what's that for? ```FunctionPointer``` is, as a matter of fact, a
 ```Promise``` and quite useful when callbacks return new promises, i.e. because they somehow transform their arguments or invoke further asynchronous operations.
-Here is how we agument rewrite the previous example with a status checker by using a callback that makes use of a promise:
+Here is how we rewrite the previous example with a status checker by using a callback that makes use of a promise:
 
 ```java
-import static CallbackToPromiseAdapter.callback;
+import static CallbackAdapter.callback;
 
 ...
 
@@ -227,9 +225,24 @@ void doLogin(){
 	Promise<User> userPromise = new PromiseImpl<User>();
 	userService.getUser(login, password, callback(Callback.class, userPromise);
 
-	Promise<Status> status = userPromise.whenAvailable(onUserAvailable(userPromise));
+	Promise<Status> status = userPromise.invokeWhenAvailable(onUserAvailable(userPromise));
 	
 	form.showUserFullName(userPromise);
 	form.showStatus(status);
 }
 ```
+
+Since a ```FunctionPointer``` is a ```Promise```, we can listen to it - just like in the example above. Methods can use this
+to trigger resolutions, i.e.:
+
+FunctionPointer<Void> onUserAvailable(Promise<User> user){
+	final FunctionPointer<Boolean> status = new FunctionPointerImpl(this, user);
+	if (user.isAvailable()){
+		userService.checkStatus(user.get(), new Callback{
+			void onSuccess(boolean value){
+				status.set(value);
+			}
+		});
+	}
+	return status;
+}

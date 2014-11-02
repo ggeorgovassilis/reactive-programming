@@ -6,7 +6,6 @@ import reactive.exceptions.AlreadyResolvedException;
 import reactive.exceptions.NotResolvedException;
 import reactive.exceptions.PromiseException;
 import reactive.Promise;
-import reactive.Promise.Callback;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -95,9 +94,9 @@ public class PromiseTest {
 		Promise<String> p = new PromiseImpl<String>();
 		Callback<String> callback = mockCallback();
 		p.whenAvailable(callback);
-		verify(callback, never()).success(anyString());
+		verify(callback, never()).set(anyString());
 		p.set(value);
-		verify(callback, times(1)).success(value);
+		verify(callback, times(1)).set(value);
 	}
 
 	@Test
@@ -106,9 +105,9 @@ public class PromiseTest {
 		Promise<String> p = new PromiseImpl<String>();
 		Callback<String> callback = mockCallback();
 		p.whenAvailable(callback);
-		verify(callback, never()).error(any(Exception.class));
+		verify(callback, never()).fail(any(Exception.class));
 		p.fail(error);
-		verify(callback, times(1)).error(error);
+		verify(callback, times(1)).fail(error);
 	}
 
 	@Test
@@ -121,11 +120,11 @@ public class PromiseTest {
 
 		p.whenAvailable(callback1);
 		p.whenAvailable(callback2);
-		verify(callback1, never()).error(any(Exception.class));
-		verify(callback2, never()).error(any(Exception.class));
+		verify(callback1, never()).fail(any(Exception.class));
+		verify(callback2, never()).fail(any(Exception.class));
 		p.fail(error);
-		verify(callback1, times(1)).error(error);
-		verify(callback2, times(1)).error(error);
+		verify(callback1, times(1)).fail(error);
+		verify(callback2, times(1)).fail(error);
 	}
 
 	@Test
@@ -135,7 +134,7 @@ public class PromiseTest {
 		Callback<String> callback = mockCallback();
 		p.set(value);
 		p.whenAvailable(callback);
-		verify(callback, times(1)).success(value);
+		verify(callback, times(1)).set(value);
 	}
 
 	@Test
@@ -145,7 +144,7 @@ public class PromiseTest {
 		Callback<String> callback = mockCallback();
 		p.fail(error);
 		p.whenAvailable(callback);
-		verify(callback, times(1)).error(error);
+		verify(callback, times(1)).fail(error);
 	}
 
 }

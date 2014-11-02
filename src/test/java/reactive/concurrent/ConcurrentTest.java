@@ -13,6 +13,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +64,8 @@ public class ConcurrentTest {
 	private int getNextUserIdFromQueue() {
 		try {
 			Integer id =  queue.take();
+			if (id.intValue() == TERMINATE)
+				return id;
 			Integer seen = activeUsers.get(id);
 			if (seen!=null)
 				throw new RuntimeException("user "+id+" was seen "+seen+" times");
@@ -93,7 +96,8 @@ public class ConcurrentTest {
 	@Test
 	public void concurrentTest() throws Exception{
 		long start = -System.currentTimeMillis();
-
+		final AtomicLong count = new AtomicLong();
+		long timestamp = -System.currentTimeMillis();
 		for (int i = 0; i < THREADS; i++) {
 			Thread worker = new Thread() {
 				@Override
@@ -107,9 +111,10 @@ public class ConcurrentTest {
 						userDao.findUserById(userId, CallbackAdapter.callback(
 								AsyncUserDao.Callback.class, user));
 						final Promise<Boolean> status = user
-								.whenAvailable(getStatus(user));
-						Promise<Void> done = status.whenAvailable(resolveTest(user, status, userId));
+								.invokeWhenAvailable(getStatus(user));
+						Promise<Void> done = status.invokeWhenAvailable(resolveTest(user, status, userId));
 						done.waitForResolution();
+						count.incrementAndGet();
 					}
 				}
 			};
@@ -121,9 +126,12 @@ public class ConcurrentTest {
 			int userId = getUserId();
 			queue.put(userId);
 		}
+		System.err.println("Terminating");
 		for (int i=0;i<workers.size();i++)
 			queue.put(TERMINATE);
 		for (Thread t:workers)
 			t.join();
+		timestamp+=System.currentTimeMillis();
+		System.out.println(count.get()/(timestamp/1000)+" runs/sec");
 	}
 }
