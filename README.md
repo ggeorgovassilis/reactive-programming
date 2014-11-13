@@ -235,6 +235,7 @@ void doLogin(){
 Since a ```FunctionPointer``` is a ```Promise```, we can listen to it - just like in the example above. Methods can use this
 to trigger resolutions, i.e.:
 
+```java
 FunctionPointer<Void> onUserAvailable(Promise<User> user){
 	final FunctionPointer<Boolean> status = new FunctionPointerImpl(this, user);
 	if (user.isAvailable()){
@@ -246,3 +247,4 @@ FunctionPointer<Void> onUserAvailable(Promise<User> user){
 	}
 	return status;
 }
+```
